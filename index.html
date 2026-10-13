@@ -1,0 +1,160 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>ShopSmart: Will the visitor buy?</title>
+<style>
+:root{--bg:#f6f7f9;--card:#ffffff;--ink:#1b2430;--muted:#5b6675;--line:#dde2e9;--accent:#2563eb;--good:#15803d;--goodbg:#e3f4e8;--warn:#a3480a;--warnbg:#fcefdc;--track:#e6eaf0;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#12161c;--card:#1b212a;--ink:#e8edf3;--muted:#9aa6b5;--line:#2c3541;--accent:#6ea0ff;--good:#5fd38a;--goodbg:#173325;--warn:#f0b36b;--warnbg:#3a2a14;--track:#2a323d}}
+:root[data-theme="dark"]{--bg:#12161c;--card:#1b212a;--ink:#e8edf3;--muted:#9aa6b5;--line:#2c3541;--accent:#6ea0ff;--good:#5fd38a;--goodbg:#173325;--warn:#f0b36b;--warnbg:#3a2a14;--track:#2a323d}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 "Segoe UI",system-ui,-apple-system,Roboto,Arial,sans-serif}
+main{max-width:860px;margin:0 auto;padding:28px 18px 48px}
+h1{font-size:1.7rem;line-height:1.25;margin:0 0 6px}
+h2{font-size:1.1rem;margin:0 0 12px}
+p{margin:0 0 10px}
+.muted{color:var(--muted)}
+.banner{background:var(--goodbg);color:var(--good);border-radius:10px;padding:12px 16px;font-weight:600;margin:18px 0 22px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:18px;margin-bottom:18px}
+.tabs{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px}
+.tabs button{flex:1 1 220px;text-align:left;border:1.5px solid var(--line);background:var(--card);color:var(--ink);border-radius:10px;padding:10px 14px;font:inherit;cursor:pointer}
+.tabs button small{display:block;color:var(--muted)}
+.tabs button[aria-pressed="true"]{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent) inset}
+button:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:12px}
+.stat{border:1px solid var(--line);border-radius:10px;padding:12px}
+.stat b{display:block;font-size:1.9rem;line-height:1.1}
+.stat.main{border-color:var(--accent)}
+.stat.main b{color:var(--accent)}
+.stat span{color:var(--muted);font-size:.9rem}
+.cm{display:grid;grid-template-columns:90px 1fr 1fr;gap:8px;align-items:stretch;max-width:560px}
+.cm .h{color:var(--muted);font-size:.88rem;display:flex;align-items:center;justify-content:center;text-align:center}
+.cell{border-radius:10px;padding:12px 10px;text-align:center}
+.cell b{display:block;font-size:1.7rem;line-height:1.2}
+.cell small{display:block;font-size:.85rem}
+.ok{background:var(--goodbg);color:var(--good)}
+.bad{background:var(--warnbg);color:var(--warn)}
+.say li{margin-bottom:6px}
+.row{display:grid;grid-template-columns:150px 1fr 56px;gap:10px;align-items:center;margin-bottom:10px}
+.track{position:relative;height:22px;background:var(--track);border-radius:6px}
+.fill{height:100%;border-radius:6px;background:var(--accent)}
+.mark{position:absolute;top:-5px;bottom:-5px;width:2px;background:var(--ink)}
+.legend{font-size:.9rem;color:var(--muted)}
+.cmp{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:12px}
+code{background:var(--track);padding:1px 6px;border-radius:5px;font-size:.92em}
+details{margin-top:6px}
+summary{cursor:pointer;font-weight:600}
+@media (max-width:520px){.row{grid-template-columns:100px 1fr 48px}.cm{grid-template-columns:64px 1fr 1fr}}
+</style>
+</head>
+<body>
+<main>
+  <h1>ShopSmart: will a visitor buy?</h1>
+  <p class="muted">Decision Tree results on the test set: 2,441 visitor sessions (2,059 non-buyers, 382 buyers).</p>
+  <div class="banner">Both models beat the target. The goal was F1 above 0.55.</div>
+
+  <div class="card">
+    <h2>Pick a model</h2>
+    <div class="tabs" id="tabs">
+      <button data-m="m1" aria-pressed="true">Model 1<small>First run, best F1</small></button>
+      <button data-m="m2" aria-pressed="false">Model 2<small>With class_weight='balanced', finds more buyers</small></button>
+    </div>
+
+    <div class="stats">
+      <div class="stat main"><b id="f1"></b><span>F1 score (main metric)</span></div>
+      <div class="stat"><b id="prec"></b><span>Precision</span></div>
+      <div class="stat"><b id="rec"></b><span>Recall</span></div>
+      <div class="stat"><b id="acc"></b><span>Accuracy</span></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>What the model got right and wrong</h2>
+    <div class="cm">
+      <div></div><div class="h">Model said:<br>No purchase</div><div class="h">Model said:<br>Will buy</div>
+      <div class="h">Really did not buy</div>
+      <div class="cell ok"><b id="tn"></b><small>Correct (TN)</small></div>
+      <div class="cell bad"><b id="fp"></b><small>False alarm (FP)</small></div>
+      <div class="h">Really bought</div>
+      <div class="cell bad"><b id="fn"></b><small>Missed buyer (FN)</small></div>
+      <div class="cell ok"><b id="tp"></b><small>Caught buyer (TP)</small></div>
+    </div>
+    <ul class="say" style="margin-top:16px;padding-left:20px">
+      <li id="s1"></li><li id="s2"></li>
+    </ul>
+  </div>
+
+  <div class="card">
+    <h2>F1 score vs the 0.55 target</h2>
+    <div id="bars"></div>
+    <p class="legend">The black line marks the 0.55 benchmark.</p>
+  </div>
+
+  <div class="card">
+    <h2>Pruning check (GridSearchCV, 5-fold)</h2>
+    <div class="cmp">
+      <div class="stat"><b>0.645</b><span>F1 on training data (cross-validation)</span></div>
+      <div class="stat"><b>0.639</b><span>F1 on test data</span></div>
+      <div class="stat"><b>0.006</b><span>Gap between them</span></div>
+    </div>
+    <p>The two scores are almost the same, so the tree is not overfitting.</p>
+    <p class="muted">Best settings found: <code>max_depth=4</code> <code>min_samples_leaf=5</code> <code>min_samples_split=10</code> <code>criterion='gini'</code> <code>class_weight='balanced'</code></p>
+  </div>
+
+  <div class="card">
+    <h2>Which model should we use?</h2>
+    <p><b>Model 1</b> has the higher F1 (0.662). Pick it if you want the best balance between false alarms and missed buyers.</p>
+    <p><b>Model 2</b> catches 86% of buyers (recall 0.86), but makes more false alarms. Pick it if missing a buyer costs more than showing an extra ad.</p>
+    <details>
+      <summary>What do these words mean?</summary>
+      <p><b>Precision:</b> when the model says "will buy", how often is it right?<br>
+      <b>Recall:</b> out of all real buyers, how many did the model find?<br>
+      <b>F1:</b> one score that balances precision and recall. We use it because the data is imbalanced: only about 16% of visitors buy, so accuracy alone can fool you.</p>
+    </details>
+  </div>
+</main>
+
+<script>
+var MODELS = {
+  m1: { name: "Model 1", cm: [[1960, 99], [144, 238]] },
+  m2: { name: "Model 2", cm: [[1742, 317], [54, 328]] }
+};
+function calc(cm) {
+  var tn = cm[0][0], fp = cm[0][1], fn = cm[1][0], tp = cm[1][1];
+  var n = tn + fp + fn + tp;
+  return { tn: tn, fp: fp, fn: fn, tp: tp,
+    prec: tp / (tp + fp), rec: tp / (tp + fn),
+    f1: 2 * tp / (2 * tp + fp + fn), acc: (tn + tp) / n };
+}
+function $(id) { return document.getElementById(id); }
+function show(key) {
+  var r = calc(MODELS[key].cm);
+  $("f1").textContent = r.f1.toFixed(3);
+  $("prec").textContent = r.prec.toFixed(2);
+  $("rec").textContent = r.rec.toFixed(2);
+  $("acc").textContent = r.acc.toFixed(2);
+  $("tn").textContent = r.tn; $("fp").textContent = r.fp;
+  $("fn").textContent = r.fn; $("tp").textContent = r.tp;
+  $("s1").textContent = "Out of " + (r.tp + r.fn) + " real buyers, the model found " + r.tp + " and missed " + r.fn + ".";
+  $("s2").textContent = "The model said \"will buy\" " + (r.tp + r.fp) + " times and was right " + r.tp + " times (" + Math.round(r.prec * 100) + "%).";
+  var btns = document.querySelectorAll("#tabs button");
+  for (var i = 0; i < btns.length; i++) btns[i].setAttribute("aria-pressed", btns[i].dataset.m === key ? "true" : "false");
+}
+function bars() {
+  var html = "";
+  ["m1", "m2"].forEach(function (k) {
+    var f = calc(MODELS[k].cm).f1;
+    html += '<div class="row"><span>' + MODELS[k].name + '</span><div class="track"><div class="fill" style="width:' + (f * 100) + '%"></div><div class="mark" style="left:55%"></div></div><b>' + f.toFixed(3) + '</b></div>';
+  });
+  $("bars").innerHTML = html;
+}
+document.querySelectorAll("#tabs button").forEach(function (b) {
+  b.addEventListener("click", function () { show(b.dataset.m); });
+});
+bars(); show("m1");
+</script>
+</body>
+</html>
