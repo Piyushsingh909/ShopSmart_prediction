@@ -2,7 +2,7 @@
 
 Predicting whether an online store visitor will make a purchase, using session behaviour data (12,330 sessions).
 
-**Live dashboard:** https://YOUR-USERNAME.github.io/shopsmart-purchase-prediction/
+**Live dashboard:** (https://piyushsingh909.github.io/ShopSmart_prediction/)
 
 ## Problem
 ShopSmart could not tell which visitors were likely to buy, which made marketing inefficient. The goal was to build a Decision Tree classifier that predicts `Revenue` (purchase: yes/no). Only about 16% of visitors buy, so the data is imbalanced and **F1 score** is used instead of accuracy. Target: **F1 > 0.55**.
